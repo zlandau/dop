@@ -1,4 +1,4 @@
-(* repeats *)
+(* blank file *)
 
 fun chop str = String.substring (str, 0, (String.size str) - 1);
 
@@ -94,7 +94,7 @@ struct
     fun readEntry f = let
       val line = case TextIO.inputLine f of
                       SOME x => x
-                    | NONE   => raise (DopException "Invalid input")
+                    | NONE   => raise DopException ("Invalid input in " ^ filename)
       val parts = String.tokens (fn x => x = #"\t") line
       val key = hd parts
       val dir = chop (List.last parts)
@@ -121,7 +121,7 @@ struct
            val realKey = if exists (key, entries) then key
                          else case getByDir (key, entries) of
                                    SOME dir => dir
-                                 | NONE     => raise DopException "dir"
+                                 | NONE     => raise DopException ("Entry not found: " ^ key)
          in
            save (path, remove(realKey, entries))
          end
@@ -129,14 +129,14 @@ struct
                               SOME dir => let
                                 val entry = (case get (key, entries) of
                                                   SOME k => k
-                                                | NONE   => raise DopException "blah")
+                                                | NONE   => raise DopException ("Entry not found: " ^ key))
                               in
                                 printEntry entry
                               end
                             | NONE     => app printEntry entries)
         | CmdChDir key => (case getDir (key, entries) of
                                 SOME dir => OS.FileSys.chDir dir
-                              | NONE     => raise DopException "bl")
+                              | NONE     => raise DopException ("Entry not found:" ^ key))
   end;
 
   fun cmdStrToCmd str params = let
@@ -158,7 +158,7 @@ struct
          end
        | "dlist"     => if nparams > 0 then CmdList (param 0) else CmdList ("")
        | "dchange"   => CmdChDir (param 0)
-       | _           => raise DopException str
+       | _           => raise DopException ("Invalid command: " ^ str)
   end;
 
   fun run name params = eval (cmdStrToCmd name params)
@@ -192,4 +192,5 @@ Dop.exists ("b", d);
 Dop.exists ("f", d);
 Dop.replace (("b", "9"), d);
 
-main(CommandLine.name(), CommandLine.arguments());
+main(CommandLine.name(), CommandLine.arguments())
+    handle Dop.DopException msg => (print ("error: " ^ msg ^ "\n"); 1);
