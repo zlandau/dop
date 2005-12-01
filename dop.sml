@@ -25,6 +25,7 @@ sig
   val load : string -> (string * string) list
   val eval : command -> unit
   val run  : string -> string list -> unit
+  val getFileLocation : unit -> string
 end;
 
 structure Dop :> Dop =
@@ -38,6 +39,14 @@ struct
     | CmdChDir of string
 
   val empty = [];
+
+  fun getFileLocation _ = let
+    val home = case Posix.ProcEnv.getenv "HOME" of
+                    SOME x => x
+                  | NONE   => raise DopException "$HOME not defined"
+  in
+    home ^ "/.dop"
+  end
 
   fun add(entry, entries) = entry :: entries;
 
@@ -98,7 +107,7 @@ struct
   end;
 
   fun eval cmd = let
-    val path = "test.dat"
+    val path = getFileLocation ()
     val entries = load path
   in
     case cmd of
@@ -156,18 +165,26 @@ struct
 
 end;
 
-fun basename path = List.last ( String.tokens (fn x => x = #"/") path);
-
 fun main (name, args) = let
-  val base = basename name
+  val base = OS.Path.file name
   val cmd = if base = "dop"
             then if length args = 0 then "dlist" else List.hd args
             else base
   val params = if base = "dop"
                then if length args = 0 then [] else List.tl args
                else args
+  fun createIfMissing file = let
+    fun createEmpty f = let
+      val fh = TextIO.openOut f
+    in
+      TextIO.closeOut fh
+    end
+    val fh = TextIO.openIn file handle SysErr => (createEmpty file; TextIO.openIn file)
+  in
+    TextIO.closeIn fh
+  end
 in
-  ( Dop.run cmd params; 0 )
+  ( createIfMissing (Dop.getFileLocation ()); Dop.run cmd params; 0 )
 end;
 
 val d = [("a", "1"), ("b", "2"), ("c", "3")];
