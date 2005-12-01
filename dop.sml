@@ -10,6 +10,7 @@ sig
       CmdAdd of string * string
     | CmdRemove of string
     | CmdList of string
+    | CmdChDir of string
 
   val empty : (string * string) list
   val add : (string * string) * (string * string) list -> (string * string) list
@@ -34,6 +35,7 @@ struct
       CmdAdd of string * string
     | CmdRemove of string
     | CmdList of string
+    | CmdChDir of string
 
   val empty = [];
 
@@ -114,7 +116,7 @@ struct
          in
            save (path, remove(realKey, entries))
          end
-       | CmdList key => case getDir(key, entries) of 
+       | CmdList key => (case getDir(key, entries) of 
                               SOME dir => let
                                 val entry = case get (key, entries) of
                                                  SOME k => k
@@ -122,7 +124,11 @@ struct
                                                in
                                                  printEntry entry
                                           end
-                            | NONE     => app printEntry entries
+                            | NONE     => app printEntry entries)
+        | CmdChDir key => case getDir (key, entries) of
+                               SOME dir => OS.FileSys.chDir dir
+
+                             | NONE     => raise DopException "bl"
   end;
 
   fun cmdStrToCmd str params = let
@@ -143,6 +149,7 @@ struct
            CmdRemove (key)
          end
        | "dlist"     => if nparams > 0 then CmdList (param 0) else CmdList ("")
+       | "dchange"   => CmdChDir (param 0)
        | _            => raise DopException str
   end;
 
