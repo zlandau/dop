@@ -66,15 +66,15 @@ struct
 
   fun replace ((key, dir), []) = []
     | replace ((key, dir), ((k,p)::xs)) = if key = (k:string)
-                                   then (k,dir)::replace ((key, dir), xs)
-                                   else (k,p)::replace ((key, dir), xs)
+                                          then (k,dir)::replace ((key, dir), xs)
+                                          else (k,p)::replace ((key, dir), xs)
 
   fun save(filename, entries) = let
     val fh = TextIO.openOut filename
     fun writeEntry (f, (k,p)::xs) = (
-      TextIO.output(f, k ^ "\t" ^ p ^ "\n");
+      TextIO.output (f, k ^ "\t" ^ p ^ "\n");
       writeEntry (f, xs))
-      | writeEntry (f, []) = ()
+    | writeEntry (f, []) = ()
   in
     writeEntry (fh, entries);
     TextIO.closeOut fh
@@ -109,26 +109,25 @@ struct
            save (path, e)
          end
        | CmdRemove key => let
-           val realKey = if exists (key, entries) then key else
-                          case getByDir (key, entries) of
-                               SOME dir => dir
-                             | NONE     => raise DopException "dir"
+           val realKey = if exists (key, entries) then key
+                         else case getByDir (key, entries) of
+                                   SOME dir => dir
+                                 | NONE     => raise DopException "dir"
          in
            save (path, remove(realKey, entries))
          end
        | CmdList key => (case getDir(key, entries) of 
                               SOME dir => let
-                                val entry = case get (key, entries) of
-                                                 SOME k => k
-                                               | NONE   => raise DopException "blah"
-                                               in
-                                                 printEntry entry
-                                          end
+                                val entry = (case get (key, entries) of
+                                                  SOME k => k
+                                                | NONE   => raise DopException "blah")
+                              in
+                                printEntry entry
+                              end
                             | NONE     => app printEntry entries)
-        | CmdChDir key => case getDir (key, entries) of
-                               SOME dir => OS.FileSys.chDir dir
-
-                             | NONE     => raise DopException "bl"
+        | CmdChDir key => (case getDir (key, entries) of
+                                SOME dir => OS.FileSys.chDir dir
+                              | NONE     => raise DopException "bl")
   end;
 
   fun cmdStrToCmd str params = let
@@ -150,7 +149,7 @@ struct
          end
        | "dlist"     => if nparams > 0 then CmdList (param 0) else CmdList ("")
        | "dchange"   => CmdChDir (param 0)
-       | _            => raise DopException str
+       | _           => raise DopException str
   end;
 
   fun run name params = eval (cmdStrToCmd name params)
@@ -162,11 +161,11 @@ fun basename path = List.last ( String.tokens (fn x => x = #"/") path);
 fun main (name, args) = let
   val base = basename name
   val cmd = if base = "dop"
-    then if length args = 0 then "dlist" else List.hd args
-    else base
+            then if length args = 0 then "dlist" else List.hd args
+            else base
   val params = if base = "dop"
-    then if length args = 0 then [] else List.tl args
-    else args
+               then if length args = 0 then [] else List.tl args
+               else args
 in
   ( Dop.run cmd params; 0 )
 end;
