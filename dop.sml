@@ -1,10 +1,10 @@
 (* blank file *)
 
-fun chop str = String.substring (str, 0, (String.size str) - 1);
+fun chop str = String.substring (str, 0, (String.size str) - 1)
 
 signature Dop =
 sig
-  exception DopException of string;
+  exception DopException of string
 
   datatype command =
       CmdAdd of string * string
@@ -26,7 +26,7 @@ sig
   val eval : command -> unit
   val run  : string -> string list -> unit
   val getFileLocation : unit -> string
-end;
+end
 
 structure Dop :> Dop =
 struct
@@ -38,7 +38,7 @@ struct
     | CmdList of string
     | CmdChDir of string
 
-  val empty = [];
+  val empty = []
 
   fun getFileLocation _ = let
     val home = case Posix.ProcEnv.getenv "HOME" of
@@ -48,21 +48,21 @@ struct
     home ^ "/.dop"
   end
 
-  fun add(entry, entries) = entry :: entries;
+  fun add(entry, entries) = entry :: entries
 
   fun remove (key, []) = []
     | remove (key, (k,p)::xs) = if key = (k:string) then remove (key, xs)
                                 else (k,p)::remove (key, xs)
 
-  fun printEntry (a,b) = print (a ^ "\t" ^ b ^ "\n");
+  fun printEntry (a,b) = print (a ^ "\t" ^ b ^ "\n")
 
   fun get (key, []) = NONE
     | get (key, ((k,p)::xs)) = if key = (k:string) then SOME (k,p)
-                               else get (key, xs);
+                               else get (key, xs)
 
   fun getDir (key, []) = NONE
     | getDir (key, ((k,p)::xs)) = if key = (k:string) then SOME p
-                                  else getDir (key, xs);
+                                  else getDir (key, xs)
 
   fun getByDir (dir, []) = NONE
     | getByDir (dir, ((k,p)::xs)) = if dir = (p:string) then SOME k
@@ -87,7 +87,7 @@ struct
   in
     writeEntry (fh, entries);
     TextIO.closeOut fh
-  end;
+  end
 
   fun load filename = let
     val fh = TextIO.openIn filename
@@ -101,10 +101,10 @@ struct
     in
       if TextIO.endOfStream fh then (key, dir)::[]
       else (key, dir)::(readEntry fh)
-    end;
+    end
   in
     readEntry fh
-  end;
+  end
 
   fun eval cmd = let
     val path = getFileLocation ()
@@ -137,7 +137,7 @@ struct
         | CmdChDir key => (case getDir (key, entries) of
                                 SOME dir => OS.FileSys.chDir dir
                               | NONE     => raise DopException ("Entry not found:" ^ key))
-  end;
+  end
 
   fun cmdStrToCmd str params = let
     fun param num = List.nth (params, num)
@@ -159,11 +159,11 @@ struct
        | "dlist"     => if nparams > 0 then CmdList (param 0) else CmdList ("")
        | "dchange"   => CmdChDir (param 0)
        | _           => raise DopException ("Invalid command: " ^ str)
-  end;
+  end
 
   fun run name params = eval (cmdStrToCmd name params)
 
-end;
+end
 
 fun main (name, args) = let
   val base = OS.Path.file name
@@ -185,12 +185,7 @@ fun main (name, args) = let
   end
 in
   ( createIfMissing (Dop.getFileLocation ()); Dop.run cmd params; 0 )
-end;
+end
 
-val d = [("a", "1"), ("b", "2"), ("c", "3")];
-Dop.exists ("b", d);
-Dop.exists ("f", d);
-Dop.replace (("b", "9"), d);
-
-main(CommandLine.name(), CommandLine.arguments())
-    handle Dop.DopException msg => (print ("error: " ^ msg ^ "\n"); 1);
+val _ = main(CommandLine.name(), CommandLine.arguments())
+    handle Dop.DopException msg => (print ("error: " ^ msg ^ "\n"); 1)
