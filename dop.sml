@@ -132,7 +132,7 @@ struct
     case str of
          "dpush"      => let
            val key = param 0
-           val dir = if nparams > 0 then param 0 else OS.FileSys.getDir()
+           val dir = if nparams > 1 then param 1 else OS.FileSys.getDir()
          in
            CmdAdd (key, dir)
          end
@@ -154,11 +154,11 @@ fun basename path = List.last ( String.tokens (fn x => x = #"/") path);
 
 fun main (name, args) = let
   val base = basename name
-  val cmd = if base = "dop" then
-    if length args = 0 then "dlist" else List.hd args
+  val cmd = if base = "dop"
+    then if length args = 0 then "dlist" else List.hd args
     else base
-  val params = if base = "dop" then 
-    if length args = 0 then [] else List.tl args
+  val params = if base = "dop"
+    then if length args = 0 then [] else List.tl args
     else args
 in
   ( Dop.run cmd params; 0 )
