@@ -105,7 +105,7 @@ struct
       else (key, dir)::(readEntry fh)
     end
   in
-    readEntry fh
+    if TextIO.endOfStream fh then [] else readEntry fh
   end
 
   fun eval cmd = let
