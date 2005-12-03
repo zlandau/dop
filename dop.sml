@@ -163,8 +163,12 @@ struct
            CmdRemove (key)
          end
        | "dlist"     => if nparams > 0 then CmdList (param 0) else CmdList ("")
-       | "dchange"   => CmdChDir (param 0)
-       | "dprint"    => CmdPrint (param 0)
+       | "dchange"   => if nparams > 0
+                        then CmdChDir (param 0)
+                        else raise DopException ("Missing key")
+       | "dprint"    => if nparams > 0
+                        then CmdPrint (param 0)
+                        else raise DopException ("Missing key")
        | _           => raise DopException ("Invalid command: " ^ str)
   end
 
