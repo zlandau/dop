@@ -126,15 +126,15 @@ struct
            save (path, remove(realKey, entries))
          end
        | CmdList (SOME key) => (case getDir(key, entries) of
-                              SOME dir => let
-                                val entry = (case get (key, entries) of
-                                                  SOME k => k
-                                                | NONE   => raise DopException ("Entry not found: " ^ key))
-                                val (_,jim) = entry
-                              in
-                                print (dir ^ "\n")
-                              end
-                            | NONE     => raise DopException ("Entry not found: " ^ key))
+                                     SOME dir => let
+                                       val entry = (case get (key, entries) of
+                                                         SOME k => k
+                                                       | NONE   => raise DopException ("Entry not found: " ^ key))
+                                       val (_,jim) = entry
+                                     in
+                                       print (dir ^ "\n")
+                                     end
+                                   | NONE     => raise DopException ("Entry not found: " ^ key))
         | CmdList NONE => app printEntry entries
         | CmdChDir key => (case getDir (key, entries) of
                                 SOME dir => OS.FileSys.chDir dir
@@ -159,7 +159,6 @@ struct
   end
 
   fun run name params = eval (cmdStrToCmd name params)
-
 end
 
 fun main (name, args) = let
@@ -169,17 +168,15 @@ fun main (name, args) = let
                          | ("dop", x::xs)  => (x, xs)
                          | _               => (base, args)
   fun createIfMissing file = let
-    fun createEmpty f = let
-      val fh = TextIO.openOut f
-    in
-      TextIO.closeOut fh
-    end
+    fun createEmpty f = TextIO.closeOut (TextIO.openOut f)
     val fh = TextIO.openIn file handle SysErr => (createEmpty file; TextIO.openIn file)
   in
     TextIO.closeIn fh
   end
 in
-  ( createIfMissing (Dop.getFileLocation ()); Dop.run cmd params; 0 )
+  ( createIfMissing (Dop.getFileLocation ());
+    Dop.run cmd params;
+    0 )
 end
 
 val _ = main(CommandLine.name(), CommandLine.arguments())
