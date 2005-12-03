@@ -9,9 +9,8 @@ sig
   datatype command =
       CmdAdd of string * string
     | CmdRemove of string
-    | CmdList of string
+    | CmdList of string option
     | CmdChDir of string
-    | CmdPrint of string
 
   val empty : (string * string) list
   val add : (string * string) * (string * string) list -> (string * string) list
@@ -36,9 +35,8 @@ struct
   datatype command =
       CmdAdd of string * string
     | CmdRemove of string
-    | CmdList of string
+    | CmdList of string option
     | CmdChDir of string
-    | CmdPrint of string
 
   val empty = []
 
@@ -127,22 +125,20 @@ struct
          in
            save (path, remove(realKey, entries))
          end
-       | CmdList key => (case getDir(key, entries) of 
+       | CmdList (SOME key) => (case getDir(key, entries) of
                               SOME dir => let
                                 val entry = (case get (key, entries) of
                                                   SOME k => k
                                                 | NONE   => raise DopException ("Entry not found: " ^ key))
+                                val (_,jim) = entry
                               in
-                                printEntry entry
+                                print (dir ^ "\n")
                               end
-                            | NONE     => app printEntry entries)
+                            | NONE     => raise DopException ("Entry not found: " ^ key))
+        | CmdList NONE => app printEntry entries
         | CmdChDir key => (case getDir (key, entries) of
                                 SOME dir => OS.FileSys.chDir dir
                               | NONE     => raise DopException ("Entry not found :" ^ key))
-        | CmdPrint key => (case getDir (key, entries) of
-                                SOME dir => print (dir ^ "\n")
-                              | NONE     => raise DopException ("Entry not found: " ^ key))
-
   end
 
   fun cmdStrToCmd str params = let
@@ -162,12 +158,9 @@ struct
          in
            CmdRemove (key)
          end
-       | "dlist"     => if nparams > 0 then CmdList (param 0) else CmdList ("")
+       | "dlist"     => if nparams > 0 then CmdList (SOME (param 0)) else CmdList NONE
        | "dchange"   => if nparams > 0
                         then CmdChDir (param 0)
-                        else raise DopException ("Missing key")
-       | "dprint"    => if nparams > 0
-                        then CmdPrint (param 0)
                         else raise DopException ("Missing key")
        | _           => raise DopException ("Invalid command: " ^ str)
   end
