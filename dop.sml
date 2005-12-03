@@ -164,12 +164,10 @@ end
 
 fun main (name, args) = let
   val base = OS.Path.file name
-  val cmd = if base = "dop"
-            then if length args = 0 then "dlist" else List.hd args
-            else base
-  val params = if base = "dop"
-               then if length args = 0 then [] else List.tl args
-               else args
+  val (cmd, params) = case (base, args) of
+                           ("dop", nil)    => ("dlist", nil)
+                         | ("dop", x::xs)  => (x, xs)
+                         | _               => (base, args)
   fun createIfMissing file = let
     fun createEmpty f = let
       val fh = TextIO.openOut f
