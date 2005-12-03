@@ -11,6 +11,7 @@ sig
     | CmdRemove of string
     | CmdList of string
     | CmdChDir of string
+    | CmdPrint of string
 
   val empty : (string * string) list
   val add : (string * string) * (string * string) list -> (string * string) list
@@ -37,6 +38,7 @@ struct
     | CmdRemove of string
     | CmdList of string
     | CmdChDir of string
+    | CmdPrint of string
 
   val empty = []
 
@@ -136,7 +138,11 @@ struct
                             | NONE     => app printEntry entries)
         | CmdChDir key => (case getDir (key, entries) of
                                 SOME dir => OS.FileSys.chDir dir
-                              | NONE     => raise DopException ("Entry not found:" ^ key))
+                              | NONE     => raise DopException ("Entry not found :" ^ key))
+        | CmdPrint key => (case getDir (key, entries) of
+                                SOME dir => print (dir ^ "\n")
+                              | NONE     => raise DopException ("Entry not found: " ^ key))
+
   end
 
   fun cmdStrToCmd str params = let
@@ -158,6 +164,7 @@ struct
          end
        | "dlist"     => if nparams > 0 then CmdList (param 0) else CmdList ("")
        | "dchange"   => CmdChDir (param 0)
+       | "dprint"    => CmdPrint (param 0)
        | _           => raise DopException ("Invalid command: " ^ str)
   end
 
