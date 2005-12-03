@@ -145,24 +145,17 @@ struct
     fun param num = List.nth (params, num)
     val nparams = List.length params
   in
-    case str of
-         "dpush"      => let
-           val key = param 0
-           val dir = if nparams > 1 then param 1 else OS.FileSys.getDir()
-         in
-           CmdAdd (key, dir)
-         end
-       | "dpop"       => let
-           val key = if nparams > 0 then param 0
-                     else OS.FileSys.getDir()
-         in
-           CmdRemove (key)
-         end
-       | "dlist"     => if nparams > 0 then CmdList (SOME (param 0)) else CmdList NONE
-       | "dchange"   => if nparams > 0
-                        then CmdChDir (param 0)
-                        else raise DopException ("Missing key")
-       | _           => raise DopException ("Invalid command: " ^ str)
+    case (str, params) of
+         ("dpush", [key])      => CmdAdd(key, OS.FileSys.getDir())
+       | ("dpush", [key, dir]) => CmdAdd(key, dir)
+       | ("dpush", _)          => raise DopException ("dpush <key> [dir]")
+       | ("dpop", [key])       => CmdRemove key
+       | ("dpop", _)           => CmdRemove (OS.FileSys.getDir())
+       | ("dlist", [key])      => CmdList (SOME key)
+       | ("dlist", _)          => CmdList NONE
+       | ("dchange", [key])    => CmdChDir key
+       | ("dchange", _)        => raise DopException ("dchange <key>")
+       | _                     => raise DopException ("Invalid command: " ^ str)
   end
 
   fun run name params = eval (cmdStrToCmd name params)
