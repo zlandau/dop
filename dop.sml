@@ -148,7 +148,9 @@ struct
     case (str, params) of
          ("dpush", [key])      => CmdAdd(key, OS.FileSys.getDir())
        | ("dpush", [key, dir]) => CmdAdd(key, dir)
-       | ("dpush", _)          => raise DopException ("dpush <key> [dir]")
+       | ("dpush", _)          => let val cwd = OS.FileSys.getDir() in
+                                  CmdAdd(OS.Path.file cwd, cwd)
+                                  end
        | ("dpop", [key])       => CmdRemove key
        | ("dpop", _)           => CmdRemove (OS.FileSys.getDir())
        | ("dlist", [key])      => CmdList (SOME key)
