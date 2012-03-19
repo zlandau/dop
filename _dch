@@ -1,0 +1,8 @@
+#!/bin/sh
+# alias dch='. _dch'
+
+if [ $# -ne 1 ]; then
+    echo "usage: dch <key>"
+else
+    cd `dlist $1`
+fi
